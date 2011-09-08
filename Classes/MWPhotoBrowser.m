@@ -9,6 +9,8 @@
 #import "MWPhotoBrowser.h"
 #import "ZoomingScrollView.h"
 
+#import "SCAppUtils.h"
+
 #define PADDING 10
 
 // Handle depreciations and supress hide warnings
@@ -18,6 +20,9 @@
 
 // MWPhotoBrowser
 @implementation MWPhotoBrowser
+
+@synthesize delegate;
+@synthesize canEditPhotos;
 
 - (id)initWithPhotos:(NSArray *)photosArray {
 	if ((self = [super init])) {
@@ -60,6 +65,7 @@
     [visiblePages release], visiblePages = nil;
     [recycledPages release], recycledPages = nil;
     [toolbar release], toolbar = nil;
+    [caption release], caption = nil;
     [previousButton release], previousButton = nil;
     [nextButton release], nextButton = nil;
 }
@@ -70,6 +76,7 @@
 	[visiblePages release];
 	[recycledPages release];
 	[toolbar release];
+    [caption release];
 	[previousButton release];
 	[nextButton release];
     [super dealloc];
@@ -105,49 +112,91 @@
     // Navigation bar
     self.navigationController.navigationBar.tintColor = nil;
     self.navigationController.navigationBar.barStyle = UIBarStyleBlackTranslucent;
-	
-    // Only show toolbar if there's more that 1 photo
-    if (photos.count > 1) {
     
-        // Toolbar
-        toolbar = [[UIToolbar alloc] initWithFrame:[self frameForToolbarAtOrientation:self.interfaceOrientation]];
-        toolbar.tintColor = nil;
-        toolbar.barStyle = UIBarStyleBlackTranslucent;
-        toolbar.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleWidth;
-        [self.view addSubview:toolbar];
-        
-        // Toolbar Items
-        previousButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"UIBarButtonItemArrowLeft.png"] style:UIBarButtonItemStylePlain target:self action:@selector(gotoPreviousPage)];
-        nextButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"UIBarButtonItemArrowRight.png"] style:UIBarButtonItemStylePlain target:self action:@selector(gotoNextPage)];
-        UIBarButtonItem *space = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:self action:nil];
-        NSMutableArray *items = [[NSMutableArray alloc] init];
-        [items addObject:space];
-        if (photos.count > 1) [items addObject:previousButton];
-        [items addObject:space];
-        if (photos.count > 1) [items addObject:nextButton];
-        [items addObject:space];
-        [toolbar setItems:items];
-        [items release];
-        [space release];
-
+    if (self.canEditPhotos) {
+        UIBarButtonItem *editButton = [[UIBarButtonItem alloc] initWithTitle:@"Edit" style:UIBarButtonItemStylePlain target:self action:@selector(editButtonHit:)];
+        self.navigationItem.rightBarButtonItem = editButton;
+        [editButton release];
     }
+    
+    // Toolbar
+    toolbar = [[UIToolbar alloc] initWithFrame:[self frameForToolbarAtOrientation:self.interfaceOrientation]];
+    toolbar.tintColor = nil;
+    toolbar.barStyle = UIBarStyleBlackTranslucent;
+    toolbar.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleWidth;
+    [self.view addSubview:toolbar];
+    
+    // Toolbar Items
+    actionButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:self action:@selector(shareButtonHit:)];
+    previousButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"UIBarButtonItemArrowLeft.png"] style:UIBarButtonItemStylePlain target:self action:@selector(gotoPreviousPage)];
+    nextButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"UIBarButtonItemArrowRight.png"] style:UIBarButtonItemStylePlain target:self action:@selector(gotoNextPage)];
+    UIBarButtonItem *flex = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:self action:nil];
+    UIBarButtonItem *fixedCenter = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace target:nil action:nil];
+    fixedCenter.width = 80.0f;
+    UIBarButtonItem *fixedLeft = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace target:nil action:nil];
+    fixedLeft.width = 40.0f;
+    
+    NSMutableArray *items = [[NSMutableArray alloc] init];
+    
+    if (photos.count > 1) {
         
+        [items addObjectsFromArray:[NSArray arrayWithObjects:fixedLeft, flex, previousButton, fixedCenter, nextButton, flex, actionButton, nil]];
+        
+    } else {
+        
+        [items addObjectsFromArray:[NSArray arrayWithObjects:flex, actionButton, nil]];
+        
+    }
+    
+    [toolbar setItems:items];
+    [items release];
+    [flex release];
+    
+    caption = [[UIView alloc] initWithFrame:[self frameForCaptionAtOrientation:self.interfaceOrientation]];
+    caption.backgroundColor = [UIColor colorWithWhite:0.0 alpha:0.5];
+    captionLabel = [[UILabel alloc] initWithFrame:[self frameForCaptionLabelAtOrientation:self.interfaceOrientation]];
+    captionLabel.backgroundColor = [UIColor clearColor];
+    captionLabel.textAlignment = UITextAlignmentCenter;
+    captionLabel.textColor = [UIColor whiteColor];
+    captionLabel.font = [UIFont systemFontOfSize:14];
+    captionLabel.shadowOffset = CGSizeMake(1.0f, 1.0f);
+    captionLabel.shadowColor = [UIColor colorWithWhite:0.0 alpha:0.5];
+    captionLabel.text = @"";
+    captionLabel.numberOfLines = 2;
+    [caption addSubview:captionLabel];
+    [self.view addSubview:caption];
+    
 	// Super
     [super viewDidLoad];
 	
 }
 
 - (void)viewWillAppear:(BOOL)animated {
-
+    
 	// Super
 	[super viewWillAppear:animated];
 	
-	// Layout
+    if(!_storedOldStyles) {
+		_oldStatusBarSyle = [UIApplication sharedApplication].statusBarStyle;
+        
+		_oldNavBarTintColor = [self.navigationController.navigationBar.tintColor retain];
+		_oldNavBarStyle = self.navigationController.navigationBar.barStyle;
+		_oldNavBarTranslucent = self.navigationController.navigationBar.translucent;
+		
+		_oldToolBarTintColor = [self.navigationController.toolbar.tintColor retain];
+		_oldToolBarStyle = self.navigationController.toolbar.barStyle;
+		_oldToolBarTranslucent = self.navigationController.toolbar.translucent;
+		_oldToolBarHidden = [self.navigationController isToolbarHidden];
+		
+		_storedOldStyles = YES;
+	}
+    
+    [SCAppUtils decustomizeNavigationController:self.navigationController];
+    [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleBlackTranslucent;
+    
+    // Layout
 	[self performLayout];
     
-    // Set status bar style to black translucent
-	[[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleBlackTranslucent animated:YES];
-    	
 	// Navigation
 	[self updateNavigation];
 	[self hideControlsAfterDelay];
@@ -155,11 +204,47 @@
 	
 }
 
+- (void)viewDidAppear:(BOOL)animated {
+    
+    // Layout
+	[self performLayout];
+    
+    [super viewDidAppear:animated];
+}
+
 - (void)viewWillDisappear:(BOOL)animated {
+    
+    self.navigationController.navigationBar.barStyle = _oldNavBarStyle;
+	self.navigationController.navigationBar.tintColor = _oldNavBarTintColor;
+	self.navigationController.navigationBar.translucent = _oldNavBarTranslucent;
 	
+	[[UIApplication sharedApplication] setStatusBarStyle:_oldStatusBarSyle animated:YES];
+	
+	if(!_oldToolBarHidden) {
+		
+		if ([self.navigationController isToolbarHidden]) {
+			[self.navigationController setToolbarHidden:NO animated:YES];
+		}
+		
+		self.navigationController.toolbar.barStyle = _oldNavBarStyle;
+		self.navigationController.toolbar.tintColor = _oldNavBarTintColor;
+		self.navigationController.toolbar.translucent = _oldNavBarTranslucent;
+		
+	} else {
+		
+		[self.navigationController setToolbarHidden:_oldToolBarHidden animated:YES];
+		
+	}
+    
+    if (self.navigationController.navigationBarHidden) {
+        [self.navigationController setNavigationBarHidden:NO animated:NO];
+    }
+    
+    [SCAppUtils customizeNavigationController:self.navigationController];
+    
 	// Super
 	[super viewWillDisappear:animated];
-
+    
 	// Cancel any hiding timers
 	[self cancelControlHiding];
 	
@@ -176,13 +261,16 @@
 	
 	// Toolbar
 	toolbar.frame = [self frameForToolbarAtOrientation:self.interfaceOrientation];
-	
+	caption.frame = [self frameForCaptionAtOrientation:self.interfaceOrientation];
+    captionLabel.frame = [self frameForCaptionLabelAtOrientation:self.interfaceOrientation];
+    
+    
 	// Remember index
 	NSUInteger indexPriorToLayout = currentPageIndex;
 	
 	// Get paging scroll view frame to determine if anything needs changing
 	CGRect pagingScrollViewFrame = [self frameForPagingScrollView];
-		
+    
 	// Frame needs changing
 	pagingScrollView.frame = pagingScrollViewFrame;
 	
@@ -201,7 +289,6 @@
 	// Reset
 	currentPageIndex = indexPriorToLayout;
 	performingLayout = NO;
-
 }
 
 #pragma mark -
@@ -210,7 +297,7 @@
 // Get image if it has been loaded, otherwise nil
 - (UIImage *)imageAtIndex:(NSUInteger)index {
 	if (photos && index < photos.count) {
-
+        
 		// Get image or obtain in background
 		MWPhoto *photo = [photos objectAtIndex:index];
 		if ([photo isImageAvailable]) {
@@ -223,11 +310,29 @@
 	return nil;
 }
 
+- (NSString *)captionAtIndex:(NSUInteger)index {
+	if (photos && index < photos.count) {
+        
+		// Get image or obtain in background
+		MWPhoto *photo = [photos objectAtIndex:index];
+        return [photo caption];
+	}
+	return nil;
+}
+
 #pragma mark -
 #pragma mark MWPhotoDelegate
 
 - (void)photoDidFinishLoading:(MWPhoto *)photo {
 	NSUInteger index = [photos indexOfObject:photo];
+    
+    if (actionButton)
+    {
+		if (currentPageIndex == [photos indexOfObject:photo]) {
+			actionButton.enabled = YES;
+		}
+	}
+    
 	if (index != NSNotFound) {
 		if ([self isDisplayingPageForIndex:index]) {
 			
@@ -241,6 +346,14 @@
 
 - (void)photoDidFailToLoad:(MWPhoto *)photo {
 	NSUInteger index = [photos indexOfObject:photo];
+    
+    if (actionButton)
+    {
+		if (currentPageIndex == [photos indexOfObject:photo]) {
+			actionButton.enabled = NO;
+		}
+	}
+    
 	if (index != NSNotFound) {
 		if ([self isDisplayingPageForIndex:index]) {
 			
@@ -316,7 +429,7 @@
 	page.frame = [self frameForPageAtIndex:index];
 	page.index = index;
 }
-										  
+
 - (ZoomingScrollView *)dequeueRecycledPage {
 	ZoomingScrollView *page = [recycledPages anyObject];
 	if (page) {
@@ -343,7 +456,7 @@
         
         // Release anything > index + 1
         for (i = index + 2; i < photos.count; i++) { [(MWPhoto *)[photos objectAtIndex:i] releasePhoto]; /*NSLog(@"Release image at index %i", i);*/ }
-    
+        
         // Preload index + 1
         i = index + 1; 
         if (i < photos.count) { [(MWPhoto *)[photos objectAtIndex:i] obtainImageInBackgroundAndNotify:self]; /*NSLog(@"Pre-loading image at index %i", i);*/ }
@@ -395,6 +508,24 @@
 	return CGRectMake(0, self.view.bounds.size.height - height, self.view.bounds.size.width, height);
 }
 
+- (CGRect)frameForCaptionAtOrientation:(UIInterfaceOrientation)orientation {
+    
+	CGFloat height = 44;
+    CGRect toolbarFrame = [self frameForToolbarAtOrientation:orientation];
+    
+	return CGRectMake(0, CGRectGetMinY(toolbarFrame)-height, self.view.bounds.size.width, height);
+}
+
+- (CGRect)frameForCaptionLabelAtOrientation:(UIInterfaceOrientation)orientation {
+	
+    CGFloat verticalPadding = 5;
+    CGFloat horizontalPadding = 10;
+    
+    CGFloat height = [self frameForCaptionAtOrientation:orientation].size.height;
+    
+	return CGRectMake(10, 5, self.view.bounds.size.width-horizontalPadding*2, height-verticalPadding*2);
+}
+
 #pragma mark -
 #pragma mark UIScrollView Delegate
 
@@ -432,7 +563,7 @@
 #pragma mark Navigation
 
 - (void)updateNavigation {
-
+    
 	// Title
 	if (photos.count > 1) {
 		self.title = [NSString stringWithFormat:@"%i of %i", currentPageIndex+1, photos.count];		
@@ -443,6 +574,23 @@
 	// Buttons
 	previousButton.enabled = (currentPageIndex > 0);
 	nextButton.enabled = (currentPageIndex < photos.count-1);
+    
+    if (actionButton)
+    {
+		if ([self imageAtIndex:currentPageIndex]) {
+			actionButton.enabled = YES;
+		} else {
+			actionButton.enabled = NO;
+		}
+	}
+    
+    if ([[self captionAtIndex:currentPageIndex] isEqualToString:@""]) {
+        [caption setHidden:YES];
+    } else {
+        [caption setHidden:NO];
+    }
+    
+    captionLabel.text = [self captionAtIndex:currentPageIndex];
 	
 }
 
@@ -498,6 +646,8 @@
 	[UIView setAnimationDuration:0.35];
 	[self.navigationController.navigationBar setAlpha:hidden ? 0 : 1];
 	[toolbar setAlpha:hidden ? 0 : 1];
+    [caption setAlpha:hidden ? 0 : 1];
+    
 	[UIView commitAnimations];
 	
 	// Control hiding timer
@@ -535,7 +685,7 @@
 }
 
 - (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
-
+    
 	// Remember page index before rotation
 	pageIndexBeforeRotation = currentPageIndex;
 	rotating = YES;
@@ -569,5 +719,167 @@
 		}
 	}
 }
+
+#pragma mark -
+#pragma mark Actions
+
+- (void)doneSavingImage{
+	NSLog(@"done saving image");
+}
+
+- (void)savePhoto{
+	
+	UIImageWriteToSavedPhotosAlbum([self imageAtIndex:currentPageIndex], nil, nil, nil);
+}
+
+- (void)copyPhoto {
+    
+	[[UIPasteboard generalPasteboard] setData:UIImagePNGRepresentation([self imageAtIndex:currentPageIndex]) forPasteboardType:@"public.png"];
+}
+
+- (void)emailPhoto{
+	
+	MFMailComposeViewController *mailViewController = [[MFMailComposeViewController alloc] init];
+	[mailViewController setSubject:@"Shared Photo"];
+	[mailViewController addAttachmentData:[NSData dataWithData:UIImagePNGRepresentation([self imageAtIndex:currentPageIndex])] mimeType:@"png" fileName:@"Photo.png"];
+	mailViewController.mailComposeDelegate = self;
+	
+	if (UI_USER_INTERFACE_IDIOM()==UIUserInterfaceIdiomPad) {
+		mailViewController.modalPresentationStyle = UIModalPresentationPageSheet;
+	}
+	
+	[self presentModalViewController:mailViewController animated:YES];
+	[mailViewController release];
+}
+
+- (void)confirmDeletePhoto {
+    
+    NSString* deleteWarning = [NSString stringWithFormat:@"Are you sure you want to delete this photo? This cannot be undone.",[self.navigationItem.title lowercaseString]];
+    
+    UIAlertView* alert = [[UIAlertView alloc] initWithTitle:@"Warning"
+                                                    message:deleteWarning
+                                                   delegate:self
+                                          cancelButtonTitle:@"Cancel"
+                                          otherButtonTitles:@"Yes", nil];
+    [alert show];
+    [alert release];
+}
+
+- (void)deletePhoto {
+    if ([self.delegate respondsToSelector:@selector(deletePhoto:)]) {
+        [self.delegate deletePhoto:[photos objectAtIndex:currentPageIndex]];
+    }
+}
+
+- (void)editPhoto {
+    if ([self.delegate respondsToSelector:@selector(editPhoto:)]) {
+        [self.delegate editPhoto:[photos objectAtIndex:currentPageIndex]];
+    }
+}
+
+- (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex {
+    if (buttonIndex == 1) {
+        [self deletePhoto];
+    }
+}
+
+- (void)mailComposeController:(MFMailComposeViewController*)controller didFinishWithResult:(MFMailComposeResult)result error:(NSError*)error{
+	
+	[self dismissModalViewControllerAnimated:YES];
+	
+	NSString *mailError = nil;
+	
+	switch (result) {
+		case MFMailComposeResultSent: ; break;
+		case MFMailComposeResultFailed: mailError = @"Failed sending media, please try again...";
+			break;
+		default:
+			break;
+	}
+	
+	if (mailError != nil) {
+		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"" message:mailError delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+		[alert show];
+		[alert release];
+	}
+	
+}
+
+
+#pragma mark -
+#pragma mark UIActionSheet Methods
+
+- (void)editButtonHit:(id)sender {
+    
+    UIActionSheet *actionSheet;
+    
+    actionSheet = [[UIActionSheet alloc] initWithTitle:@"" delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:@"Delete" otherButtonTitles:@"Edit", nil];
+    
+    actionSheet.actionSheetStyle = UIActionSheetStyleBlackTranslucent;
+	actionSheet.delegate = self;
+	
+	[actionSheet showInView:self.view];
+	[actionSheet release];
+}
+
+- (void)shareButtonHit:(id)sender{
+	
+	UIActionSheet *actionSheet;
+	
+	if ([MFMailComposeViewController canSendMail]) {
+        
+		if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+			actionSheet = [[UIActionSheet alloc] initWithTitle:@"" delegate:self cancelButtonTitle:nil destructiveButtonTitle:nil otherButtonTitles:@"Save", @"Copy", @"Email", nil];
+		} else {
+			actionSheet = [[UIActionSheet alloc] initWithTitle:@"" delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil otherButtonTitles:@"Save", @"Copy", @"Email", nil];
+		}
+		
+	} else {
+		
+		if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+			actionSheet = [[UIActionSheet alloc] initWithTitle:@"" delegate:self cancelButtonTitle:nil destructiveButtonTitle:nil otherButtonTitles:@"Save", @"Copy", nil];
+		} else {
+			actionSheet = [[UIActionSheet alloc] initWithTitle:@"" delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil otherButtonTitles:@"Save", @"Copy", nil];
+		}
+		
+	}
+	
+	actionSheet.actionSheetStyle = UIActionSheetStyleBlackTranslucent;
+	actionSheet.delegate = self;
+	
+	[actionSheet showInView:self.view];
+	[actionSheet release];
+	
+}
+
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex{
+	
+    //	[self setBarsHidden:NO animated:YES];
+    
+	if ([[actionSheet buttonTitleAtIndex:0] isEqualToString:@"Delete"]) {
+        
+        if (buttonIndex == actionSheet.cancelButtonIndex) {
+            return;
+        } else if (buttonIndex == actionSheet.destructiveButtonIndex) {
+            [self confirmDeletePhoto];
+        } else if (buttonIndex == actionSheet.firstOtherButtonIndex) {
+            [self editPhoto];	
+        }
+        
+    } else if ([[actionSheet buttonTitleAtIndex:0] isEqualToString:@"Save"]) {
+        
+        if (buttonIndex == actionSheet.cancelButtonIndex) {
+            return;
+        } else if (buttonIndex == actionSheet.firstOtherButtonIndex) {
+            [self savePhoto];
+        } else if (buttonIndex == actionSheet.firstOtherButtonIndex + 1) {
+            [self copyPhoto];	
+        } else if (buttonIndex == actionSheet.firstOtherButtonIndex + 2) {
+            [self emailPhoto];	
+        }
+        
+    }
+}
+
 
 @end

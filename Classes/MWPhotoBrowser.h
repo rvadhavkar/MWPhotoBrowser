@@ -7,12 +7,22 @@
 //
 
 #import <UIKit/UIKit.h>
+#import <MessageUI/MessageUI.h>
+
 #import "MWPhoto.h"
+
+// Delegate
+@protocol MWPhotoBrowserDelegate <NSObject>
+- (void)deletePhoto:(MWPhoto*)photo;
+- (void)editPhoto:(MWPhoto*)photo;
+@end
 
 @class ZoomingScrollView;
 
-@interface MWPhotoBrowser : UIViewController <UIScrollViewDelegate, MWPhotoDelegate> {
+@interface MWPhotoBrowser : UIViewController <UIScrollViewDelegate, MWPhotoDelegate, UIActionSheetDelegate, MFMailComposeViewControllerDelegate> {
 	
+    id <MWPhotoBrowserDelegate> delegate;
+    
 	// Photos
 	NSArray *photos;
 	
@@ -26,12 +36,27 @@
 	
 	// Navigation & controls
 	UIToolbar *toolbar;
+    UIView *caption;
+    UILabel *captionLabel;
+    
 	NSTimer *controlVisibilityTimer;
-	UIBarButtonItem *previousButton, *nextButton;
+	UIBarButtonItem *previousButton, *nextButton, *actionButton;
 
+    BOOL _storedOldStyles;
+	UIStatusBarStyle _oldStatusBarSyle;
+	UIBarStyle _oldNavBarStyle;
+	BOOL _oldNavBarTranslucent;
+	UIColor* _oldNavBarTintColor;	
+	UIBarStyle _oldToolBarStyle;
+	BOOL _oldToolBarTranslucent;
+	UIColor* _oldToolBarTintColor;	
+	BOOL _oldToolBarHidden;
+    
     // Misc
 	BOOL performingLayout;
 	BOOL rotating;
+    
+    BOOL canEditPhotos;
 	
 }
 
@@ -40,6 +65,7 @@
 
 // Photos
 - (UIImage *)imageAtIndex:(NSUInteger)index;
+- (NSString *)captionAtIndex:(NSUInteger)index;
 
 // Layout
 - (void)performLayout;
@@ -59,6 +85,8 @@
 - (CGPoint)contentOffsetForPageAtIndex:(NSUInteger)index;
 - (CGRect)frameForNavigationBarAtOrientation:(UIInterfaceOrientation)orientation;
 - (CGRect)frameForToolbarAtOrientation:(UIInterfaceOrientation)orientation;
+- (CGRect)frameForCaptionAtOrientation:(UIInterfaceOrientation)orientation;
+- (CGRect)frameForCaptionLabelAtOrientation:(UIInterfaceOrientation)orientation;
 
 // Navigation
 - (void)updateNavigation;
@@ -74,6 +102,9 @@
 
 // Properties
 - (void)setInitialPageIndex:(NSUInteger)index;
+
+@property (nonatomic, assign) id <MWPhotoBrowserDelegate> delegate;
+@property (nonatomic, assign) BOOL canEditPhotos;
 
 @end
 
