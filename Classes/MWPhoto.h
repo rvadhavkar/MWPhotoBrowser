@@ -25,10 +25,15 @@
 	NSURL *photoURL;
 	UIImage *photoImage;
 	
+    NSString *caption;
+    NSNumber *ID;
+    
 	// Flags
 	BOOL workingInBackground;
 	
 }
+
+@property (retain) UIImage *photoImage;
 
 // Class
 + (MWPhoto *)photoWithImage:(UIImage *)image;
@@ -46,5 +51,8 @@
 - (UIImage *)obtainImage;
 - (void)obtainImageInBackgroundAndNotify:(id <MWPhotoDelegate>)notifyDelegate;
 - (void)releasePhoto;
+
+@property (copy) NSString* caption;
+@property (nonatomic, retain) NSNumber *ID;
 
 @end

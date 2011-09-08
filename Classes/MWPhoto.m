@@ -13,7 +13,6 @@
 @interface MWPhoto ()
 
 // Properties
-@property (retain) UIImage *photoImage;
 @property () BOOL workingInBackground;
 
 // Private Methods
@@ -26,7 +25,7 @@
 @implementation MWPhoto
 
 // Properties
-@synthesize photoImage, workingInBackground;
+@synthesize photoImage, workingInBackground, caption, ID;
 
 #pragma mark Class Methods
 
