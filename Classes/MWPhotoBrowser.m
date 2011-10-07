@@ -11,15 +11,34 @@
 
 #import "SCAppUtils.h"
 
+#if __IPHONE_5_0
+#import <Twitter/Twitter.h>
+#endif
+
 #define PADDING 10
+
+static NSString *copyLinkButtonName = @"Copy Link";
+static NSString *facebookButtonName = @"Facebook";
+static NSString *twitterButtonName = @"Twitter";
+static NSString *emailButtonName = @"Email";
 
 // Handle depreciations and supress hide warnings
 @interface UIApplication (DepreciationWarningSuppresion)
 - (void)setStatusBarHidden:(BOOL)hidden animated:(BOOL)animated;
 @end
 
+@interface MWPhotoBrowser()
+
+- (void)showShareActionSheet;
+- (void)showEditActionSheet;
+
+@end
+
 // MWPhotoBrowser
 @implementation MWPhotoBrowser
+
+@synthesize editActionSheet = _editActionSheet;
+@synthesize shareActionSheet = _shareActionSheet;
 
 @synthesize delegate;
 @synthesize canEditPhotos;
@@ -140,12 +159,12 @@
     
     if (photos.count > 1) {
         
-        [items addObjectsFromArray:[NSArray arrayWithObjects:fixedLeft, flex, previousButton, fixedCenter, nextButton, flex, actionButton, nil]];
-        
-    } else {
+        [items addObjectsFromArray:[NSArray arrayWithObjects:fixedLeft, flex, previousButton, fixedCenter, nextButton, flex,nil]];   
+    }
+    
+    if (self.canEditPhotos) {
         
         [items addObjectsFromArray:[NSArray arrayWithObjects:flex, actionButton, nil]];
-        
     }
     
     [toolbar setItems:items];
@@ -734,7 +753,11 @@
 
 - (void)copyPhoto {
     
-	[[UIPasteboard generalPasteboard] setData:UIImagePNGRepresentation([self imageAtIndex:currentPageIndex]) forPasteboardType:@"public.png"];
+    [[UIPasteboard generalPasteboard] setData:UIImagePNGRepresentation([self imageAtIndex:currentPageIndex]) forPasteboardType:@"public.png"];
+    
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Photo Copied" message:@"The photo has been succesfully copied to your clipboard." delegate:nil cancelButtonTitle:@"Dismiss" otherButtonTitles:nil];
+    [alert show];
+    [alert release];
 }
 
 - (void)emailPhoto{
@@ -805,79 +828,85 @@
 	
 }
 
+- (void)editButtonHit:(id)sender {
+    
+    _editActionSheet = [[UIActionSheet alloc] initWithTitle:@"" delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:@"Delete" otherButtonTitles:@"Edit", nil];
+    
+    _editActionSheet.actionSheetStyle = UIActionSheetStyleBlackTranslucent;
+	_editActionSheet.delegate = self;
+	
+	[_editActionSheet showFromToolbar:toolbar];
+	[_editActionSheet release];
+}
+
+- (void)shareButtonHit:(id)sender {
+	
+    if ([self.delegate canSharePhoto:[photos objectAtIndex:currentPageIndex]]) {
+        
+        [self showShareActionSheet];
+    }
+}
 
 #pragma mark -
 #pragma mark UIActionSheet Methods
 
-- (void)editButtonHit:(id)sender {
+- (void)showShareActionSheet {
     
-    UIActionSheet *actionSheet;
+    BOOL canSendMail = [MFMailComposeViewController canSendMail];
+#if __IPHONE_5_0
+    BOOL canTweet = [TWTweetComposeViewController canSendTweet];
+#endif
     
-    actionSheet = [[UIActionSheet alloc] initWithTitle:@"" delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:@"Delete" otherButtonTitles:@"Edit", nil];
-    
-    actionSheet.actionSheetStyle = UIActionSheetStyleBlackTranslucent;
-	actionSheet.delegate = self;
+	if (canSendMail && canTweet) {
+        _shareActionSheet = [[UIActionSheet alloc] initWithTitle:@"Share Photo" delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil otherButtonTitles:copyLinkButtonName, facebookButtonName, twitterButtonName, emailButtonName, nil];
+	} else if (canTweet && !canSendMail) {
+        _shareActionSheet = [[UIActionSheet alloc] initWithTitle:@"Share Photo" delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil otherButtonTitles:copyLinkButtonName, facebookButtonName, twitterButtonName, nil];
+	} else if (!canTweet && canSendMail) {
+        _shareActionSheet = [[UIActionSheet alloc] initWithTitle:@"Share Photo" delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil otherButtonTitles:copyLinkButtonName,  facebookButtonName, emailButtonName, nil];
+    } else if (!canTweet && !canSendMail) {
+        _shareActionSheet = [[UIActionSheet alloc] initWithTitle:@"Share Photo" delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil otherButtonTitles:copyLinkButtonName, facebookButtonName, nil];
+    }
 	
-	[actionSheet showInView:self.view];
-	[actionSheet release];
+	_shareActionSheet.actionSheetStyle = UIActionSheetStyleBlackTranslucent;
+	[_shareActionSheet showFromToolbar:toolbar];
+    [_shareActionSheet release];
 }
 
-- (void)shareButtonHit:(id)sender{
-	
-	UIActionSheet *actionSheet;
-	
-	if ([MFMailComposeViewController canSendMail]) {
-        
-		if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
-			actionSheet = [[UIActionSheet alloc] initWithTitle:@"" delegate:self cancelButtonTitle:nil destructiveButtonTitle:nil otherButtonTitles:@"Save", @"Copy", @"Email", nil];
-		} else {
-			actionSheet = [[UIActionSheet alloc] initWithTitle:@"" delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil otherButtonTitles:@"Save", @"Copy", @"Email", nil];
-		}
-		
-	} else {
-		
-		if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
-			actionSheet = [[UIActionSheet alloc] initWithTitle:@"" delegate:self cancelButtonTitle:nil destructiveButtonTitle:nil otherButtonTitles:@"Save", @"Copy", nil];
-		} else {
-			actionSheet = [[UIActionSheet alloc] initWithTitle:@"" delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil otherButtonTitles:@"Save", @"Copy", nil];
-		}
-		
-	}
-	
-	actionSheet.actionSheetStyle = UIActionSheetStyleBlackTranslucent;
-	actionSheet.delegate = self;
-	
-	[actionSheet showInView:self.view];
-	[actionSheet release];
-	
+- (void)showEditActionSheet {
+    
+    
 }
 
 - (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex{
 	
-    //	[self setBarsHidden:NO animated:YES];
+    if (buttonIndex == actionSheet.cancelButtonIndex) {
+        return;
+    }
     
-	if ([[actionSheet buttonTitleAtIndex:0] isEqualToString:@"Delete"]) {
+    NSString *title = [actionSheet buttonTitleAtIndex:buttonIndex];
+    MWPhoto *currentPhoto = [photos objectAtIndex:currentPageIndex];
+    
+    if (actionSheet == _editActionSheet) {
         
-        if (buttonIndex == actionSheet.cancelButtonIndex) {
-            return;
-        } else if (buttonIndex == actionSheet.destructiveButtonIndex) {
+        if (buttonIndex == actionSheet.destructiveButtonIndex) {
             [self confirmDeletePhoto];
         } else if (buttonIndex == actionSheet.firstOtherButtonIndex) {
             [self editPhoto];	
         }
         
-    } else if ([[actionSheet buttonTitleAtIndex:0] isEqualToString:@"Save"]) {
+    } else if (actionSheet == _shareActionSheet) {
         
-        if (buttonIndex == actionSheet.cancelButtonIndex) {
-            return;
-        } else if (buttonIndex == actionSheet.firstOtherButtonIndex) {
-            [self savePhoto];
-        } else if (buttonIndex == actionSheet.firstOtherButtonIndex + 1) {
-            [self copyPhoto];	
-        } else if (buttonIndex == actionSheet.firstOtherButtonIndex + 2) {
-            [self emailPhoto];	
+        NSLog(@"Share button tapped with title: %@", title);
+        
+        if ([title isEqualToString:copyLinkButtonName]) {
+            [self.delegate copyLinkToPhoto:currentPhoto];
+        } else if ([title isEqualToString:facebookButtonName]) {
+            [self.delegate facebookPhoto:currentPhoto];
+        } else if ([title isEqualToString:emailButtonName]) {
+            [self.delegate emailPhoto:currentPhoto];
+        } else if ([title isEqualToString:twitterButtonName]) {
+            [self.delegate tweetPhoto:currentPhoto];
         }
-        
     }
 }
 

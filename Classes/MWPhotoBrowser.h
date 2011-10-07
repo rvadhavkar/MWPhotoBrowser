@@ -13,8 +13,17 @@
 
 // Delegate
 @protocol MWPhotoBrowserDelegate <NSObject>
-- (void)deletePhoto:(MWPhoto*)photo;
-- (void)editPhoto:(MWPhoto*)photo;
+
+// Editing
+- (void)deletePhoto:(MWPhoto *)photo;
+- (void)editPhoto:(MWPhoto *)photo;
+
+// Sharing
+- (BOOL)canSharePhoto:(MWPhoto *)photo;
+- (void)facebookPhoto:(MWPhoto *)photo;
+- (void)tweetPhoto:(MWPhoto *)photo;
+- (void)emailPhoto:(MWPhoto *)photo;
+- (void)copyLinkToPhoto:(MWPhoto *)photo;
 @end
 
 @class ZoomingScrollView;
@@ -57,7 +66,9 @@
 	BOOL rotating;
     
     BOOL canEditPhotos;
-	
+    
+    UIActionSheet *_editActionSheet;
+    UIActionSheet *_shareActionSheet;
 }
 
 // Init
@@ -105,6 +116,9 @@
 
 @property (nonatomic, assign) id <MWPhotoBrowserDelegate> delegate;
 @property (nonatomic, assign) BOOL canEditPhotos;
+
+@property (nonatomic, assign) UIActionSheet *editActionSheet;
+@property (nonatomic, assign) UIActionSheet *shareActionSheet;
 
 @end
 
