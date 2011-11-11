@@ -8,7 +8,6 @@
 
 #import "MWPhoto.h"
 #import "UIImage+Decompress.h"
-#import "baseAppDelegate.h"
 
 // Private
 @interface MWPhoto ()
