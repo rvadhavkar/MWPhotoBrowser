@@ -23,7 +23,9 @@
 	// Image
 	NSString *photoPath;
 	NSURL *photoURL;
+    
 	UIImage *photoImage;
+    UIImage *loadingImage;
 	
     NSString *caption;
     NSNumber *ID;
@@ -34,6 +36,7 @@
 }
 
 @property (retain) UIImage *photoImage;
+@property (nonatomic, retain) UIImage *loadingImage;
 
 // Class
 + (MWPhoto *)photoWithImage:(UIImage *)image;
@@ -47,6 +50,7 @@
 
 // Public methods
 - (BOOL)isImageAvailable;
+- (BOOL)loadingImageAvailable;
 - (UIImage *)image;
 - (UIImage *)obtainImage;
 - (void)obtainImageInBackgroundAndNotify:(id <MWPhotoDelegate>)notifyDelegate;

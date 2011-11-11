@@ -8,6 +8,7 @@
 
 #import "MWPhoto.h"
 #import "UIImage+Decompress.h"
+#import "baseAppDelegate.h"
 
 // Private
 @interface MWPhoto ()
@@ -25,7 +26,7 @@
 @implementation MWPhoto
 
 // Properties
-@synthesize photoImage, workingInBackground, caption, ID;
+@synthesize photoImage, loadingImage, workingInBackground, caption, ID;
 
 #pragma mark Class Methods
 
@@ -68,6 +69,7 @@
 	[photoPath release];
 	[photoURL release];
 	[photoImage release];
+    [loadingImage release];
 	[super dealloc];
 }
 
@@ -78,6 +80,10 @@
 // loading from file or URL is not required
 - (BOOL)isImageAvailable {
 	return (self.photoImage != nil);
+}
+
+- (BOOL)loadingImageAvailable {
+	return (self.loadingImage != nil);    
 }
 
 // Return image
@@ -108,6 +114,7 @@
 			NSURLRequest *request = [[NSURLRequest alloc] initWithURL:photoURL];
 			NSError *error = nil;
 			NSURLResponse *response = nil;
+            [((baseAppDelegate*)[UIApplication sharedApplication].delegate) setNetworkActivityIndicatorVisible:YES];
 			NSData *data = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:&error];
 			[request release];
 			if (data) {
