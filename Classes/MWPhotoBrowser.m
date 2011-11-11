@@ -9,8 +9,6 @@
 #import "MWPhotoBrowser.h"
 #import "ZoomingScrollView.h"
 
-#import "SCAppUtils.h"
-
 #if __IPHONE_5_0
 #import <Twitter/Twitter.h>
 #endif
@@ -192,7 +190,7 @@ static NSString *emailButtonName = @"Email";
 
 - (void)viewWillAppear:(BOOL)animated {
     
-	// Super
+    // Super
 	[super viewWillAppear:animated];
 	
     if(!_storedOldStyles) {
@@ -210,7 +208,6 @@ static NSString *emailButtonName = @"Email";
 		_storedOldStyles = YES;
 	}
     
-    [SCAppUtils decustomizeNavigationController:self.navigationController];
     [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleBlackTranslucent;
     
     // Layout
@@ -258,8 +255,6 @@ static NSString *emailButtonName = @"Email";
     if (self.navigationController.navigationBarHidden) {
         [self.navigationController setNavigationBarHidden:NO animated:NO];
     }
-    
-    [SCAppUtils customizeNavigationController:self.navigationController];
     
 	// Super
 	[super viewWillDisappear:animated];
@@ -321,7 +316,10 @@ static NSString *emailButtonName = @"Email";
 		MWPhoto *photo = [photos objectAtIndex:index];
 		if ([photo isImageAvailable]) {
 			return [photo image];
-		} else {
+        } else if ([photo loadingImageAvailable])
+            [photo obtainImageInBackgroundAndNotify:self];
+            return [photo loadingImage];
+        {
 			[photo obtainImageInBackgroundAndNotify:self];
 		}
 		
@@ -603,7 +601,9 @@ static NSString *emailButtonName = @"Email";
 		}
 	}
     
-    if ([[self captionAtIndex:currentPageIndex] isEqualToString:@""]) {
+    NSString *photoCaption = [self captionAtIndex:currentPageIndex];
+    
+    if ((photoCaption == nil) || ([photoCaption isEqualToString:@""])) {
         [caption setHidden:YES];
     } else {
         [caption setHidden:NO];

@@ -11,22 +11,9 @@
 
 #import "MWPhoto.h"
 
-// Delegate
-@protocol MWPhotoBrowserDelegate <NSObject>
-
-// Editing
-- (void)deletePhoto:(MWPhoto *)photo;
-- (void)editPhoto:(MWPhoto *)photo;
-
-// Sharing
-- (BOOL)canSharePhoto:(MWPhoto *)photo;
-- (void)facebookPhoto:(MWPhoto *)photo;
-- (void)tweetPhoto:(MWPhoto *)photo;
-- (void)emailPhoto:(MWPhoto *)photo;
-- (void)copyLinkToPhoto:(MWPhoto *)photo;
-@end
-
 @class ZoomingScrollView;
+
+@protocol MWPhotoBrowserDelegate;
 
 @interface MWPhotoBrowser : UIViewController <UIScrollViewDelegate, MWPhotoDelegate, UIActionSheetDelegate, MFMailComposeViewControllerDelegate> {
 	
@@ -121,4 +108,19 @@
 @property (nonatomic, assign) UIActionSheet *shareActionSheet;
 
 @end
+
+@protocol MWPhotoBrowserDelegate <NSObject>
+
+// Editing
+- (void)deletePhoto:(MWPhoto *)photo;
+- (void)editPhoto:(MWPhoto *)photo;
+
+// Sharing
+- (BOOL)canSharePhoto:(MWPhoto *)photo;
+- (void)facebookPhoto:(MWPhoto *)photo;
+- (void)tweetPhoto:(MWPhoto *)photo;
+- (void)emailPhoto:(MWPhoto *)photo;
+- (void)copyLinkToPhoto:(MWPhoto *)photo;
+@end
+
 
