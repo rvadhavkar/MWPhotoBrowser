@@ -26,7 +26,7 @@
 		// Image view
 		photoImageView = [[UIImageViewTap alloc] initWithFrame:CGRectZero];
 		photoImageView.tapDelegate = self;
-		photoImageView.contentMode = UIViewContentModeCenter;
+		photoImageView.contentMode = UIViewContentModeScaleAspectFit;
 		photoImageView.backgroundColor = [UIColor blackColor];
 		[self addSubview:photoImageView];
 		
@@ -78,7 +78,7 @@
 
 // Get and display image
 - (void)displayImage {
-	if (index != NSNotFound && photoImageView.image == nil) {
+	if (index != NSNotFound /*&& photoImageView.image == nil*/) {
 		
 		// Reset
 		self.maximumZoomScale = 1;
@@ -149,7 +149,10 @@
 	// min scale of 1
 	if (xScale > 1 && yScale > 1) {
 		minScale = 1.0;
-	}
+        photoImageView.frame = CGRectMake(0.0, 0.0, boundsSize.width, boundsSize.height);
+	} else {
+        photoImageView.frame = CGRectMake(0.0, 0.0, imageSize.width, imageSize.height);
+    }
     
 	// Calculate Max
 	CGFloat maxScale = 2.0; // Allow double scale
