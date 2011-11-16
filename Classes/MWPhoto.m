@@ -18,6 +18,8 @@
 // Private Methods
 - (void)doBackgroundWork:(id <MWPhotoDelegate>)delegate;
 
++ (void)setNetworkActivityIndicatorVisible:(BOOL)setVisible;
+
 @end
 
 
@@ -74,6 +76,22 @@
 
 #pragma mark Photo
 
++ (void)setNetworkActivityIndicatorVisible:(BOOL)setVisible {
+    static NSInteger NumberOfCallsToSetVisible = 0;
+    if (setVisible) 
+        NumberOfCallsToSetVisible++;
+    else 
+        NumberOfCallsToSetVisible--;
+    
+    // The assertion helps to find programmer errors in activity indicator management.
+    // Since a negative NumberOfCallsToSetVisible is not a fatal error, 
+    // it should probably be removed from production code.
+    NSAssert(NumberOfCallsToSetVisible >= 0, @"Network Activity Indicator was asked to hide more often than shown");
+    
+    // Display the indicator as long as our static counter is > 0.
+    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:(NumberOfCallsToSetVisible > 0)];
+}
+
 // Return whether the image available
 // It is available if the UIImage has been loaded and
 // loading from file or URL is not required
@@ -108,12 +126,30 @@
 			}
 			
 		} else if (photoURL) { 
-			
-			// Read image from URL and return
+            
+            SEL networkActivitySelector = NSSelectorFromString(@"setNetworkActivityIndicatorVisible:");
+            
+            NSInvocation *showInvocation = [NSInvocation invocationWithMethodSignature:[MWPhoto methodSignatureForSelector:networkActivitySelector]];
+            
+            NSInvocation *hideInvocation = [NSInvocation invocationWithMethodSignature: [MWPhoto methodSignatureForSelector:networkActivitySelector]];
+            
+            [showInvocation setSelector:networkActivitySelector];
+            [showInvocation setTarget:MWPhoto.class];
+            BOOL showInvocationVisible = YES;
+            [showInvocation setArgument:&showInvocationVisible atIndex:2];
+            
+            [hideInvocation setSelector:networkActivitySelector];
+            [hideInvocation setTarget:MWPhoto.class];
+            BOOL hideInvocationVisible = NO;
+            [hideInvocation setArgument:&hideInvocationVisible atIndex:2];
+            
+            [showInvocation performSelectorOnMainThread:@selector(invoke) withObject:nil waitUntilDone:YES];
+            
+            // Read image from URL and return
 			NSURLRequest *request = [[NSURLRequest alloc] initWithURL:photoURL];
 			NSError *error = nil;
 			NSURLResponse *response = nil;
-            [((baseAppDelegate*)[UIApplication sharedApplication].delegate) setNetworkActivityIndicatorVisible:YES];
+            
 			NSData *data = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:&error];
 			[request release];
 			if (data) {
@@ -121,7 +157,7 @@
 			} else {
 				NSLog(@"Photo from URL error: %@", error);
 			}
-			
+            [hideInvocation performSelectorOnMainThread:@selector(invoke) withObject:nil waitUntilDone:YES];
 		}
 
 		// Force the loading and caching of raw image data for speed

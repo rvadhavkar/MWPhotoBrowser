@@ -316,10 +316,10 @@ static NSString *emailButtonName = @"Email";
 		MWPhoto *photo = [photos objectAtIndex:index];
 		if ([photo isImageAvailable]) {
 			return [photo image];
-        } else if ([photo loadingImageAvailable])
+        } else if ([photo loadingImageAvailable]) {
             [photo obtainImageInBackgroundAndNotify:self];
             return [photo loadingImage];
-        {
+        } else {
 			[photo obtainImageInBackgroundAndNotify:self];
 		}
 		
