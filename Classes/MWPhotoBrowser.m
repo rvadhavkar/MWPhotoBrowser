@@ -775,8 +775,21 @@ static NSString *emailButtonName = @"Email";
 	[mailViewController release];
 }
 
-- (void)confirmDeletePhoto {
+- (void)confirmDeleteGallery
+{
+    NSString* deleteWarning = [NSString stringWithFormat:@"Are you sure you want to delete this gallery? This will delete all %i photos in this gallery. This cannot be undone.", photos.count, [self.navigationItem.title lowercaseString]];
     
+    UIAlertView* alert = [[UIAlertView alloc] initWithTitle:@"Warning"
+                                                    message:deleteWarning
+                                                   delegate:self
+                                          cancelButtonTitle:@"Cancel"
+                                          otherButtonTitles:@"Yes", nil];
+    [alert show];
+    [alert release];
+}
+
+- (void)confirmDeletePhoto
+{
     NSString* deleteWarning = [NSString stringWithFormat:@"Are you sure you want to delete this photo? This cannot be undone.",[self.navigationItem.title lowercaseString]];
     
     UIAlertView* alert = [[UIAlertView alloc] initWithTitle:@"Warning"
@@ -792,6 +805,12 @@ static NSString *emailButtonName = @"Email";
     if ([self.delegate respondsToSelector:@selector(deletePhoto:)]) {
         [self.delegate deletePhoto:[photos objectAtIndex:currentPageIndex]];
     }
+}
+
+- (void)deleteGallery {
+    if ([self.delegate respondsToSelector:@selector(deleteGallery:)]) {
+        [self.delegate deleteGallery:photos];
+    }    
 }
 
 - (void)editPhoto {
