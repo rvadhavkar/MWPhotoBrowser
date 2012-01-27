@@ -113,7 +113,7 @@
 
 // Editing
 - (void)deletePhoto:(MWPhoto *)photo;
-- (void)deleteGallery:(NSArray *)photos;
+//- (void)deleteGallery:(NSArray *)photos;
 - (void)editPhoto:(MWPhoto *)photo;
 
 // Sharing

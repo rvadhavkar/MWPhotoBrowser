@@ -130,8 +130,7 @@
             SEL networkActivitySelector = NSSelectorFromString(@"setNetworkActivityIndicatorVisible:");
             
             NSInvocation *showInvocation = [NSInvocation invocationWithMethodSignature:[MWPhoto methodSignatureForSelector:networkActivitySelector]];
-            
-            NSInvocation *hideInvocation = [NSInvocation invocationWithMethodSignature: [MWPhoto methodSignatureForSelector:networkActivitySelector]];
+            NSInvocation *hideInvocation = [NSInvocation invocationWithMethodSignature:[MWPhoto methodSignatureForSelector:networkActivitySelector]];
             
             [showInvocation setSelector:networkActivitySelector];
             [showInvocation setTarget:MWPhoto.class];
