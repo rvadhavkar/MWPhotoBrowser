@@ -151,18 +151,19 @@ static NSString *emailButtonName = @"Email";
     UIBarButtonItem *fixedCenter = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace target:nil action:nil];
     fixedCenter.width = 80.0f;
     UIBarButtonItem *fixedLeft = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace target:nil action:nil];
-    fixedLeft.width = 40.0f;
+    fixedLeft.width = 80.0f;
     
     NSMutableArray *items = [[NSMutableArray alloc] init];
     
     if (photos.count > 1) {
         
-        [items addObjectsFromArray:[NSArray arrayWithObjects:fixedLeft, flex, previousButton, fixedCenter, nextButton, flex,nil]];   
+        [items addObjectsFromArray:[NSArray arrayWithObjects:flex, previousButton, fixedCenter, nextButton, flex ,nil]];   
     }
     
     if (self.canEditPhotos) {
         
-        [items addObjectsFromArray:[NSArray arrayWithObjects:flex, actionButton, nil]];
+        [items addObject:actionButton];
+        [items insertObject:fixedLeft atIndex:0];
     }
     
     [toolbar setItems:items];
