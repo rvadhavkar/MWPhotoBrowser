@@ -808,11 +808,11 @@ static NSString *emailButtonName = @"Email";
     }
 }
 
-- (void)deleteGallery {
-    if ([self.delegate respondsToSelector:@selector(deleteGallery:)]) {
-        [self.delegate deleteGallery:photos];
-    }    
-}
+//- (void)deleteGallery {
+//    if ([self.delegate respondsToSelector:@selector(deleteGallery:)]) {
+//        [self.delegate deleteGallery:photos];
+//    }    
+//}
 
 - (void)editPhoto {
     if ([self.delegate respondsToSelector:@selector(editPhoto:)]) {
