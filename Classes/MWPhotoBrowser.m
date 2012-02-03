@@ -163,7 +163,12 @@ static NSString *emailButtonName = @"Email";
     if (self.canEditPhotos) {
         
         [items addObject:actionButton];
-        [items insertObject:fixedLeft atIndex:0];
+        
+        if (photos.count > 1) {
+            [items insertObject:fixedLeft atIndex:0];
+        } else {
+            [items insertObject:flex atIndex:0];
+        }
     }
     
     [toolbar setItems:items];
