@@ -49,9 +49,7 @@ static NSString *emailButtonName = @"Email";
 		
         // Defaults
         
-        if (UI_USER_INTERFACE_IDIOM() != UIUserInterfaceIdiomPad) {
-            self.wantsFullScreenLayout = YES;
-        }
+        self.wantsFullScreenLayout = YES;
         self.hidesBottomBarWhenPushed = YES;
 		currentPageIndex = 0;
 		performingLayout = NO;
@@ -224,9 +222,7 @@ static NSString *emailButtonName = @"Email";
 		_storedOldStyles = YES;
 	}
     
-    if (UI_USER_INTERFACE_IDIOM() != UIUserInterfaceIdiomPad) {
-        [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleBlackTranslucent;
-    }
+    [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleBlackTranslucent;
     
     // Layout
 	[self performLayout];
@@ -253,7 +249,9 @@ static NSString *emailButtonName = @"Email";
 	self.navigationController.navigationBar.translucent = _oldNavBarTranslucent;
 	
 	[[UIApplication sharedApplication] setStatusBarStyle:_oldStatusBarSyle animated:YES];
-	
+    
+    [[UIApplication sharedApplication] setStatusBarHidden:NO animated:YES];
+    
 	if(!_oldToolBarHidden) {
 		
 		if ([self.navigationController isToolbarHidden]) {
@@ -503,7 +501,8 @@ static NSString *emailButtonName = @"Email";
 #pragma mark Frame Calculations
 
 - (CGRect)frameForPagingScrollView {
-    CGRect frame = self.navigationController.view.frame;// [[UIScreen mainScreen] bounds];
+    CGRect frame = self.navigationController.view.bounds;// [[UIScreen mainScreen] bounds];
+    
     frame.origin.x -= PADDING;
     frame.size.width += (2 * PADDING);
     return frame;
@@ -534,13 +533,29 @@ static NSString *emailButtonName = @"Email";
 }
 
 - (CGRect)frameForNavigationBarAtOrientation:(UIInterfaceOrientation)orientation {
-	CGFloat height = UIInterfaceOrientationIsPortrait(orientation) ? 44 : 32;
+
+    CGFloat height;
+    
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        height = 44;
+    } else {
+        height = UIInterfaceOrientationIsPortrait(orientation) ? 44 : 32;
+    }
+	
 	return CGRectMake(0, 20, self.view.bounds.size.width, height);
 }
 
 - (CGRect)frameForToolbarAtOrientation:(UIInterfaceOrientation)orientation {
-	CGFloat height = UIInterfaceOrientationIsPortrait(orientation) ? 44 : 32;
-	return CGRectMake(0, self.view.bounds.size.height - height, self.view.bounds.size.width, height);
+    
+    CGFloat height;
+    
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        height = 44;
+    } else {
+        height = UIInterfaceOrientationIsPortrait(orientation) ? 44 : 32;
+    }
+    
+    return CGRectMake(0, self.view.bounds.size.height - height, self.view.bounds.size.width, height);
 }
 
 - (CGRect)frameForCaptionAtOrientation:(UIInterfaceOrientation)orientation {
@@ -653,35 +668,31 @@ static NSString *emailButtonName = @"Email";
 
 - (void)setControlsHidden:(BOOL)hidden {
     
-    if (UI_USER_INTERFACE_IDIOM() != UIUserInterfaceIdiomPad) {
-    
-        // Get status bar height if visible
-        CGFloat statusBarHeight = 0;
-        if (![UIApplication sharedApplication].statusBarHidden) {
-            CGRect statusBarFrame = [[UIApplication sharedApplication] statusBarFrame];
-            statusBarHeight = MIN(statusBarFrame.size.height, statusBarFrame.size.width);
-        }
-        
-        // Status Bar
-        if ([UIApplication instancesRespondToSelector:@selector(setStatusBarHidden:withAnimation:)]) {
-            [[UIApplication sharedApplication] setStatusBarHidden:hidden withAnimation:UIStatusBarAnimationFade];
-        } else {
-            [[UIApplication sharedApplication] setStatusBarHidden:hidden animated:YES];
-        }
-        
-        // Get status bar height if visible
-        if (![UIApplication sharedApplication].statusBarHidden) {
-            CGRect statusBarFrame = [[UIApplication sharedApplication] statusBarFrame];
-            statusBarHeight = MIN(statusBarFrame.size.height, statusBarFrame.size.width);
-        }
-        
-        // Set navigation bar frame
-        CGRect navBarFrame = self.navigationController.navigationBar.frame;
-        navBarFrame.origin.y = statusBarHeight;
-        self.navigationController.navigationBar.frame = navBarFrame;
-        
+    // Get status bar height if visible
+    CGFloat statusBarHeight = 0;
+    if (![UIApplication sharedApplication].statusBarHidden) {
+        CGRect statusBarFrame = [[UIApplication sharedApplication] statusBarFrame];
+        statusBarHeight = MIN(statusBarFrame.size.height, statusBarFrame.size.width);
     }
-	
+    
+    // Status Bar
+    if ([UIApplication instancesRespondToSelector:@selector(setStatusBarHidden:withAnimation:)]) {
+        [[UIApplication sharedApplication] setStatusBarHidden:hidden withAnimation:UIStatusBarAnimationFade];
+    } else {
+        [[UIApplication sharedApplication] setStatusBarHidden:hidden animated:YES];
+    }
+    
+    // Get status bar height if visible
+    if (![UIApplication sharedApplication].statusBarHidden) {
+        CGRect statusBarFrame = [[UIApplication sharedApplication] statusBarFrame];
+        statusBarHeight = MIN(statusBarFrame.size.height, statusBarFrame.size.width);
+    }
+    
+    // Set navigation bar frame
+    CGRect navBarFrame = self.navigationController.navigationBar.frame;
+    navBarFrame.origin.y = statusBarHeight;
+    self.navigationController.navigationBar.frame = navBarFrame;
+
 	// Bars
 	[UIView beginAnimations:nil context:nil];
 	[UIView setAnimationDuration:0.35];
