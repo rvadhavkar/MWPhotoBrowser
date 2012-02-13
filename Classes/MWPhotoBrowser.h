@@ -36,6 +36,7 @@
     UILabel *captionLabel;
     
 	NSTimer *controlVisibilityTimer;
+    BOOL controlsHidden;
 	UIBarButtonItem *previousButton, *nextButton, *actionButton;
 
     BOOL _storedOldStyles;

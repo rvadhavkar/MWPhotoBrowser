@@ -48,7 +48,10 @@ static NSString *emailButtonName = @"Email";
 		photos = [photosArray retain];
 		
         // Defaults
-		self.wantsFullScreenLayout = YES;
+        
+        if (UI_USER_INTERFACE_IDIOM() != UIUserInterfaceIdiomPad) {
+            self.wantsFullScreenLayout = YES;
+        }
         self.hidesBottomBarWhenPushed = YES;
 		currentPageIndex = 0;
 		performingLayout = NO;
@@ -129,6 +132,13 @@ static NSString *emailButtonName = @"Email";
     // Navigation bar
     self.navigationController.navigationBar.tintColor = nil;
     self.navigationController.navigationBar.barStyle = UIBarStyleBlackTranslucent;
+    
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        
+        UIBarButtonItem* backItem = [[UIBarButtonItem alloc] initWithTitle:@"Back" style:UIBarButtonItemStylePlain target:self.navigationController action:@selector(dismissModalViewControllerAnimated:)];
+        self.navigationItem.leftBarButtonItem = backItem;
+        [backItem release];
+    }
     
     if (self.canEditPhotos) {
         UIBarButtonItem *editButton = [[UIBarButtonItem alloc] initWithTitle:@"Edit" style:UIBarButtonItemStylePlain target:self action:@selector(editButtonHit:)];
@@ -214,7 +224,9 @@ static NSString *emailButtonName = @"Email";
 		_storedOldStyles = YES;
 	}
     
-    [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleBlackTranslucent;
+    if (UI_USER_INTERFACE_IDIOM() != UIUserInterfaceIdiomPad) {
+        [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleBlackTranslucent;
+    }
     
     // Layout
 	[self performLayout];
@@ -491,7 +503,7 @@ static NSString *emailButtonName = @"Email";
 #pragma mark Frame Calculations
 
 - (CGRect)frameForPagingScrollView {
-    CGRect frame = self.view.bounds;// [[UIScreen mainScreen] bounds];
+    CGRect frame = self.navigationController.view.frame;// [[UIScreen mainScreen] bounds];
     frame.origin.x -= PADDING;
     frame.size.width += (2 * PADDING);
     return frame;
@@ -640,31 +652,35 @@ static NSString *emailButtonName = @"Email";
 #pragma mark Control Hiding / Showing
 
 - (void)setControlsHidden:(BOOL)hidden {
-	
-	// Get status bar height if visible
-	CGFloat statusBarHeight = 0;
-	if (![UIApplication sharedApplication].statusBarHidden) {
-		CGRect statusBarFrame = [[UIApplication sharedApplication] statusBarFrame];
-		statusBarHeight = MIN(statusBarFrame.size.height, statusBarFrame.size.width);
-	}
-	
-	// Status Bar
-	if ([UIApplication instancesRespondToSelector:@selector(setStatusBarHidden:withAnimation:)]) {
-		[[UIApplication sharedApplication] setStatusBarHidden:hidden withAnimation:UIStatusBarAnimationFade];
-	} else {
-		[[UIApplication sharedApplication] setStatusBarHidden:hidden animated:YES];
-	}
-	
-	// Get status bar height if visible
-	if (![UIApplication sharedApplication].statusBarHidden) {
-		CGRect statusBarFrame = [[UIApplication sharedApplication] statusBarFrame];
-		statusBarHeight = MIN(statusBarFrame.size.height, statusBarFrame.size.width);
-	}
-	
-	// Set navigation bar frame
-	CGRect navBarFrame = self.navigationController.navigationBar.frame;
-	navBarFrame.origin.y = statusBarHeight;
-	self.navigationController.navigationBar.frame = navBarFrame;
+    
+    if (UI_USER_INTERFACE_IDIOM() != UIUserInterfaceIdiomPad) {
+    
+        // Get status bar height if visible
+        CGFloat statusBarHeight = 0;
+        if (![UIApplication sharedApplication].statusBarHidden) {
+            CGRect statusBarFrame = [[UIApplication sharedApplication] statusBarFrame];
+            statusBarHeight = MIN(statusBarFrame.size.height, statusBarFrame.size.width);
+        }
+        
+        // Status Bar
+        if ([UIApplication instancesRespondToSelector:@selector(setStatusBarHidden:withAnimation:)]) {
+            [[UIApplication sharedApplication] setStatusBarHidden:hidden withAnimation:UIStatusBarAnimationFade];
+        } else {
+            [[UIApplication sharedApplication] setStatusBarHidden:hidden animated:YES];
+        }
+        
+        // Get status bar height if visible
+        if (![UIApplication sharedApplication].statusBarHidden) {
+            CGRect statusBarFrame = [[UIApplication sharedApplication] statusBarFrame];
+            statusBarHeight = MIN(statusBarFrame.size.height, statusBarFrame.size.width);
+        }
+        
+        // Set navigation bar frame
+        CGRect navBarFrame = self.navigationController.navigationBar.frame;
+        navBarFrame.origin.y = statusBarHeight;
+        self.navigationController.navigationBar.frame = navBarFrame;
+        
+    }
 	
 	// Bars
 	[UIView beginAnimations:nil context:nil];
@@ -675,6 +691,8 @@ static NSString *emailButtonName = @"Email";
     
 	[UIView commitAnimations];
 	
+    controlsHidden = hidden;
+    
 	// Control hiding timer
 	// Will cancel existing timer but only begin hiding if
 	// they are visible
@@ -694,13 +712,13 @@ static NSString *emailButtonName = @"Email";
 // Enable/disable control visiblity timer
 - (void)hideControlsAfterDelay {
 	[self cancelControlHiding];
-	if (![UIApplication sharedApplication].isStatusBarHidden) {
+	if (!controlsHidden) {
 		controlVisibilityTimer = [[NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(hideControls) userInfo:nil repeats:NO] retain];
 	}
 }
 
 - (void)hideControls { [self setControlsHidden:YES]; }
-- (void)toggleControls { [self setControlsHidden:![UIApplication sharedApplication].isStatusBarHidden]; }
+- (void)toggleControls { [self setControlsHidden:!controlsHidden]; }
 
 #pragma mark -
 #pragma mark Rotation
@@ -724,8 +742,7 @@ static NSString *emailButtonName = @"Email";
 	[self performLayout];
 	
 	// Delay control holding
-	[self hideControlsAfterDelay];
-	
+	[self hideControlsAfterDelay];	
 }
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
