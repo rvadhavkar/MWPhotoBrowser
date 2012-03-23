@@ -17,7 +17,7 @@
 
 @interface MWPhotoBrowser : UIViewController <UIScrollViewDelegate, MWPhotoDelegate, UIActionSheetDelegate, MFMailComposeViewControllerDelegate> {
 	
-    id <MWPhotoBrowserDelegate> delegate;
+    id <MWPhotoBrowserDelegate> __unsafe_unretained delegate;
     
 	// Photos
 	NSArray *photos;
@@ -102,11 +102,11 @@
 // Properties
 - (void)setInitialPageIndex:(NSUInteger)index;
 
-@property (nonatomic, assign) id <MWPhotoBrowserDelegate> delegate;
+@property (nonatomic, unsafe_unretained) id <MWPhotoBrowserDelegate> delegate;
 @property (nonatomic, assign) BOOL canEditPhotos;
 
-@property (nonatomic, assign) UIActionSheet *editActionSheet;
-@property (nonatomic, assign) UIActionSheet *shareActionSheet;
+@property (nonatomic) UIActionSheet *editActionSheet;
+@property (nonatomic) UIActionSheet *shareActionSheet;
 
 @end
 

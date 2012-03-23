@@ -15,7 +15,7 @@
 @interface ZoomingScrollView : UIScrollView <UIScrollViewDelegate, UIImageViewTapDelegate, UIViewTapDelegate> {
 	
 	// Browser
-	MWPhotoBrowser *photoBrowser;
+	MWPhotoBrowser *__unsafe_unretained photoBrowser;
 	
 	// State
 	NSUInteger index;
@@ -29,7 +29,7 @@
 
 // Properties
 @property (nonatomic) NSUInteger index;
-@property (nonatomic, assign) MWPhotoBrowser *photoBrowser;
+@property (nonatomic, unsafe_unretained) MWPhotoBrowser *photoBrowser;
 
 // Methods
 - (void)displayImage;

@@ -45,7 +45,7 @@ static NSString *emailButtonName = @"Email";
 	if ((self = [super init])) {
 		
 		// Store photos
-		photos = [photosArray retain];
+		photos = photosArray;
 		
         // Defaults
         
@@ -79,26 +79,15 @@ static NSString *emailButtonName = @"Email";
 // Release any retained subviews of the main view.
 - (void)viewDidUnload {
 	currentPageIndex = 0;
-    [pagingScrollView release], pagingScrollView = nil;
-    [visiblePages release], visiblePages = nil;
-    [recycledPages release], recycledPages = nil;
-    [toolbar release], toolbar = nil;
-    [caption release], caption = nil;
-    [previousButton release], previousButton = nil;
-    [nextButton release], nextButton = nil;
+    pagingScrollView = nil;
+    visiblePages = nil;
+    recycledPages = nil;
+    toolbar = nil;
+    caption = nil;
+    previousButton = nil;
+    nextButton = nil;
 }
 
-- (void)dealloc {
-	[photos release];
-	[pagingScrollView release];
-	[visiblePages release];
-	[recycledPages release];
-	[toolbar release];
-    [caption release];
-	[previousButton release];
-	[nextButton release];
-    [super dealloc];
-}
 
 #pragma mark -
 #pragma mark View
@@ -135,13 +124,11 @@ static NSString *emailButtonName = @"Email";
         
         UIBarButtonItem* backItem = [[UIBarButtonItem alloc] initWithTitle:@"Back" style:UIBarButtonItemStylePlain target:self.navigationController action:@selector(dismissModalViewControllerAnimated:)];
         self.navigationItem.leftBarButtonItem = backItem;
-        [backItem release];
     }
     
     if (self.canEditPhotos) {
         UIBarButtonItem *editButton = [[UIBarButtonItem alloc] initWithTitle:@"Edit" style:UIBarButtonItemStylePlain target:self action:@selector(editButtonHit:)];
         self.navigationItem.rightBarButtonItem = editButton;
-        [editButton release];
     }
     
     // Toolbar
@@ -180,8 +167,6 @@ static NSString *emailButtonName = @"Email";
     }
     
     [toolbar setItems:items];
-    [items release];
-    [flex release];
     
     caption = [[UIView alloc] initWithFrame:[self frameForCaptionAtOrientation:self.interfaceOrientation]];
     caption.backgroundColor = [UIColor colorWithWhite:0.0 alpha:0.5];
@@ -210,11 +195,11 @@ static NSString *emailButtonName = @"Email";
     if(!_storedOldStyles) {
 		_oldStatusBarSyle = [UIApplication sharedApplication].statusBarStyle;
         
-		_oldNavBarTintColor = [self.navigationController.navigationBar.tintColor retain];
+		_oldNavBarTintColor = self.navigationController.navigationBar.tintColor;
 		_oldNavBarStyle = self.navigationController.navigationBar.barStyle;
 		_oldNavBarTranslucent = self.navigationController.navigationBar.translucent;
 		
-		_oldToolBarTintColor = [self.navigationController.toolbar.tintColor retain];
+		_oldToolBarTintColor = self.navigationController.toolbar.tintColor;
 		_oldToolBarStyle = self.navigationController.toolbar.barStyle;
 		_oldToolBarTranslucent = self.navigationController.toolbar.translucent;
 		_oldToolBarHidden = [self.navigationController isToolbarHidden];
@@ -430,7 +415,7 @@ static NSString *emailButtonName = @"Email";
 		if (![self isDisplayingPageForIndex:index]) {
 			ZoomingScrollView *page = [self dequeueRecycledPage];
 			if (!page) {
-				page = [[[ZoomingScrollView alloc] init] autorelease];
+				page = [[ZoomingScrollView alloc] init];
 				page.photoBrowser = self;
 			}
 			[self configurePage:page forIndex:index];
@@ -466,7 +451,8 @@ static NSString *emailButtonName = @"Email";
 - (ZoomingScrollView *)dequeueRecycledPage {
 	ZoomingScrollView *page = [recycledPages anyObject];
 	if (page) {
-		[[page retain] autorelease];
+        // ARC
+//		[[page retain] autorelease];
 		[recycledPages removeObject:page];
 	}
 	return page;
@@ -715,7 +701,6 @@ static NSString *emailButtonName = @"Email";
 	// If a timer exists then cancel and release
 	if (controlVisibilityTimer) {
 		[controlVisibilityTimer invalidate];
-		[controlVisibilityTimer release];
 		controlVisibilityTimer = nil;
 	}
 }
@@ -724,7 +709,7 @@ static NSString *emailButtonName = @"Email";
 - (void)hideControlsAfterDelay {
 	[self cancelControlHiding];
 	if (!controlsHidden) {
-		controlVisibilityTimer = [[NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(hideControls) userInfo:nil repeats:NO] retain];
+		controlVisibilityTimer = [NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(hideControls) userInfo:nil repeats:NO];
 	}
 }
 
@@ -791,7 +776,6 @@ static NSString *emailButtonName = @"Email";
     
     UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Photo Copied" message:@"The photo has been succesfully copied to your clipboard." delegate:nil cancelButtonTitle:@"Dismiss" otherButtonTitles:nil];
     [alert show];
-    [alert release];
 }
 
 - (void)emailPhoto{
@@ -806,7 +790,6 @@ static NSString *emailButtonName = @"Email";
 	}
 	
 	[self presentModalViewController:mailViewController animated:YES];
-	[mailViewController release];
 }
 
 - (void)confirmDeleteGallery
@@ -819,7 +802,6 @@ static NSString *emailButtonName = @"Email";
                                           cancelButtonTitle:@"Cancel"
                                           otherButtonTitles:@"Yes", nil];
     [alert show];
-    [alert release];
 }
 
 - (void)confirmDeletePhoto
@@ -832,7 +814,6 @@ static NSString *emailButtonName = @"Email";
                                           cancelButtonTitle:@"Cancel"
                                           otherButtonTitles:@"Yes", nil];
     [alert show];
-    [alert release];
 }
 
 - (void)deletePhoto {
@@ -876,7 +857,6 @@ static NSString *emailButtonName = @"Email";
 	if (mailError != nil) {
 		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"" message:mailError delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
 		[alert show];
-		[alert release];
 	}
 	
 }
@@ -889,7 +869,6 @@ static NSString *emailButtonName = @"Email";
 	_editActionSheet.delegate = self;
 	
 	[_editActionSheet showFromToolbar:toolbar];
-	[_editActionSheet release];
 }
 
 - (void)shareButtonHit:(id)sender {
@@ -922,7 +901,6 @@ static NSString *emailButtonName = @"Email";
 	
 	_shareActionSheet.actionSheetStyle = UIActionSheetStyleBlackTranslucent;
 	[_shareActionSheet showFromToolbar:toolbar];
-    [_shareActionSheet release];
 }
 
 - (void)showEditActionSheet {
