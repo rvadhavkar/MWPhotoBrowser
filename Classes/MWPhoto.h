@@ -35,8 +35,8 @@
 	
 }
 
-@property  UIImage *photoImage;
-@property (nonatomic) UIImage *loadingImage;
+@property (nonatomic, strong) UIImage *photoImage;
+@property (nonatomic, strong) UIImage *loadingImage;
 
 // Class
 + (MWPhoto *)photoWithImage:(UIImage *)image;
@@ -57,6 +57,6 @@
 - (void)releasePhoto;
 
 @property (copy) NSString* caption;
-@property (nonatomic) NSNumber *ID;
+@property (nonatomic, strong) NSNumber *ID;
 
 @end

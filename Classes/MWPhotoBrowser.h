@@ -105,8 +105,8 @@
 @property (nonatomic, unsafe_unretained) id <MWPhotoBrowserDelegate> delegate;
 @property (nonatomic, assign) BOOL canEditPhotos;
 
-@property (nonatomic) UIActionSheet *editActionSheet;
-@property (nonatomic) UIActionSheet *shareActionSheet;
+@property (nonatomic, strong) UIActionSheet *editActionSheet;
+@property (nonatomic, strong) UIActionSheet *shareActionSheet;
 
 @end
 
