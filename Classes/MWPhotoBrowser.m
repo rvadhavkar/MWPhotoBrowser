@@ -794,7 +794,7 @@ static NSString *emailButtonName = @"Email";
 
 - (void)confirmDeleteGallery
 {
-    NSString* deleteWarning = [NSString stringWithFormat:@"Are you sure you want to delete this gallery? This will delete all %i photos in this gallery. This cannot be undone.", photos.count, [self.navigationItem.title lowercaseString]];
+    NSString* deleteWarning = [NSString stringWithFormat:@"Are you sure you want to delete this gallery? This will delete all %i photos in this gallery. This cannot be undone.", photos.count];
     
     UIAlertView* alert = [[UIAlertView alloc] initWithTitle:@"Warning"
                                                     message:deleteWarning
@@ -806,7 +806,7 @@ static NSString *emailButtonName = @"Email";
 
 - (void)confirmDeletePhoto
 {
-    NSString* deleteWarning = [NSString stringWithFormat:@"Are you sure you want to delete this photo? This cannot be undone.",[self.navigationItem.title lowercaseString]];
+    NSString* deleteWarning = [NSString stringWithFormat:@"Are you sure you want to delete this photo? This cannot be undone."];
     
     UIAlertView* alert = [[UIAlertView alloc] initWithTitle:@"Warning"
                                                     message:deleteWarning
