@@ -66,9 +66,6 @@
 - (UIImage *)imageAtIndex:(NSUInteger)index;
 - (NSString *)captionAtIndex:(NSUInteger)index;
 
-// Layout
-- (void)performLayout;
-
 // Paging
 - (void)tilePages;
 - (BOOL)isDisplayingPageForIndex:(NSUInteger)index;

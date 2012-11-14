@@ -209,22 +209,11 @@ static NSString *emailButtonName = @"Email";
     
     [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleBlackTranslucent;
     
-    // Layout
-	[self performLayout];
-    
 	// Navigation
 	[self updateNavigation];
 	[self hideControlsAfterDelay];
 	[self didStartViewingPageAtIndex:currentPageIndex]; // initial
 	
-}
-
-- (void)viewDidAppear:(BOOL)animated {
-    
-    // Layout
-	[self performLayout];
-    
-    [super viewDidAppear:animated];
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -269,7 +258,7 @@ static NSString *emailButtonName = @"Email";
 #pragma mark Layout
 
 // Layout subviews
-- (void)performLayout {
+- (void)viewWillLayoutSubviews {
 	
 	// Flag
 	performingLayout = YES;
@@ -723,6 +712,11 @@ static NSString *emailButtonName = @"Email";
     return YES;
 }
 
+- (NSUInteger)supportedInterfaceOrientations
+{
+    return UIInterfaceOrientationMaskAll;
+}
+
 - (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
     
 	// Remember page index before rotation
@@ -735,7 +729,6 @@ static NSString *emailButtonName = @"Email";
 	
 	// Perform layout
 	currentPageIndex = pageIndexBeforeRotation;
-	[self performLayout];
 	
 	// Delay control holding
 	[self hideControlsAfterDelay];	
@@ -821,12 +814,6 @@ static NSString *emailButtonName = @"Email";
         [self.delegate deletePhoto:[photos objectAtIndex:currentPageIndex]];
     }
 }
-
-//- (void)deleteGallery {
-//    if ([self.delegate respondsToSelector:@selector(deleteGallery:)]) {
-//        [self.delegate deleteGallery:photos];
-//    }    
-//}
 
 - (void)editPhoto {
     if ([self.delegate respondsToSelector:@selector(editPhoto:)]) {
