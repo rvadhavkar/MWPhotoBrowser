@@ -117,7 +117,6 @@
 // Sharing
 - (BOOL)canSharePhoto:(MWPhoto *)photo;
 - (void)facebookPhoto:(MWPhoto *)photo;
-- (void)tweetPhoto:(MWPhoto *)photo;
 - (void)emailPhoto:(MWPhoto *)photo;
 - (void)copyLinkToPhoto:(MWPhoto *)photo;
 @end

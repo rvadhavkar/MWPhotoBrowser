@@ -61,7 +61,7 @@
     static NSString *CellIdentifier = @"Cell";
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
     if (cell == nil) {
-        cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier] autorelease];
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
 		cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     }
     
@@ -106,8 +106,6 @@
 	MWPhotoBrowser *browser = [[MWPhotoBrowser alloc] initWithPhotos:photos];
 	//[browser setInitialPageIndex:0]; // Can be changed if desired
 	[self.navigationController pushViewController:browser animated:YES];
-	[browser release];
-	[photos release];
 	
 	// Deselect
 	[self.tableView deselectRowAtIndexPath:indexPath animated:YES];

@@ -17,13 +17,7 @@
 
 static NSString *copyLinkButtonName = @"Copy Link";
 static NSString *facebookButtonName = @"Facebook";
-static NSString *twitterButtonName = @"Twitter";
 static NSString *emailButtonName = @"Email";
-
-// Handle depreciations and supress hide warnings
-@interface UIApplication (DepreciationWarningSuppresion)
-- (void)setStatusBarHidden:(BOOL)hidden animated:(BOOL)animated;
-@end
 
 @interface MWPhotoBrowser()
 
@@ -224,7 +218,7 @@ static NSString *emailButtonName = @"Email";
 	
 	[[UIApplication sharedApplication] setStatusBarStyle:_oldStatusBarSyle animated:YES];
     
-    [[UIApplication sharedApplication] setStatusBarHidden:NO animated:YES];
+    [[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation:UIStatusBarAnimationFade];
     
 	if(!_oldToolBarHidden) {
 		
@@ -654,7 +648,7 @@ static NSString *emailButtonName = @"Email";
     if ([UIApplication instancesRespondToSelector:@selector(setStatusBarHidden:withAnimation:)]) {
         [[UIApplication sharedApplication] setStatusBarHidden:hidden withAnimation:UIStatusBarAnimationFade];
     } else {
-        [[UIApplication sharedApplication] setStatusBarHidden:hidden animated:YES];
+        [[UIApplication sharedApplication] setStatusBarHidden:hidden withAnimation:UIStatusBarAnimationFade];
     }
     
     // Get status bar height if visible
@@ -871,18 +865,10 @@ static NSString *emailButtonName = @"Email";
 
 - (void)showShareActionSheet {
     
-    BOOL canSendMail = [MFMailComposeViewController canSendMail];
-#if __IPHONE_5_0
-    BOOL canTweet = [TWTweetComposeViewController canSendTweet];
-#endif
-    
-	if (canSendMail && canTweet) {
-        _shareActionSheet = [[UIActionSheet alloc] initWithTitle:@"Share Photo" delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil otherButtonTitles:copyLinkButtonName, facebookButtonName, twitterButtonName, emailButtonName, nil];
-	} else if (canTweet && !canSendMail) {
-        _shareActionSheet = [[UIActionSheet alloc] initWithTitle:@"Share Photo" delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil otherButtonTitles:copyLinkButtonName, facebookButtonName, twitterButtonName, nil];
-	} else if (!canTweet && canSendMail) {
+	if ([MFMailComposeViewController canSendMail]) {
         _shareActionSheet = [[UIActionSheet alloc] initWithTitle:@"Share Photo" delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil otherButtonTitles:copyLinkButtonName,  facebookButtonName, emailButtonName, nil];
-    } else if (!canTweet && !canSendMail) {
+    }
+    else {
         _shareActionSheet = [[UIActionSheet alloc] initWithTitle:@"Share Photo" delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil otherButtonTitles:copyLinkButtonName, facebookButtonName, nil];
     }
 	
@@ -922,8 +908,6 @@ static NSString *emailButtonName = @"Email";
             [self.delegate facebookPhoto:currentPhoto];
         } else if ([title isEqualToString:emailButtonName]) {
             [self.delegate emailPhoto:currentPhoto];
-        } else if ([title isEqualToString:twitterButtonName]) {
-            [self.delegate tweetPhoto:currentPhoto];
         }
     }
 }
