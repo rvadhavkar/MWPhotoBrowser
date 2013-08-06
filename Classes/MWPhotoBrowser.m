@@ -88,7 +88,23 @@ static NSString *emailButtonName = @"Email";
 
 // Implement viewDidLoad to do additional setup after loading the view, typically from a nib.
 - (void)viewDidLoad {
-	
+    
+    if(!_storedOldStyles) {
+		_oldStatusBarSyle = [UIApplication sharedApplication].statusBarStyle;
+        
+		_oldNavBarTintColor = self.navigationController.navigationBar.tintColor;
+		_oldNavBarStyle = self.navigationController.navigationBar.barStyle;
+		_oldNavBarTranslucent = self.navigationController.navigationBar.translucent;
+		
+		_oldToolBarTintColor = self.navigationController.toolbar.tintColor;
+		_oldToolBarStyle = self.navigationController.toolbar.barStyle;
+		_oldToolBarTranslucent = self.navigationController.toolbar.translucent;
+		_oldToolBarHidden = [self.navigationController isToolbarHidden];
+		
+		_storedOldStyles = YES;
+	}
+    
+    [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleBlackTranslucent;
 	// View
 	self.view.backgroundColor = [UIColor blackColor];
 	
@@ -186,22 +202,7 @@ static NSString *emailButtonName = @"Email";
     // Super
 	[super viewWillAppear:animated];
 	
-    if(!_storedOldStyles) {
-		_oldStatusBarSyle = [UIApplication sharedApplication].statusBarStyle;
-        
-		_oldNavBarTintColor = self.navigationController.navigationBar.tintColor;
-		_oldNavBarStyle = self.navigationController.navigationBar.barStyle;
-		_oldNavBarTranslucent = self.navigationController.navigationBar.translucent;
-		
-		_oldToolBarTintColor = self.navigationController.toolbar.tintColor;
-		_oldToolBarStyle = self.navigationController.toolbar.barStyle;
-		_oldToolBarTranslucent = self.navigationController.toolbar.translucent;
-		_oldToolBarHidden = [self.navigationController isToolbarHidden];
-		
-		_storedOldStyles = YES;
-	}
-    
-    [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleBlackTranslucent;
+
     
 	// Navigation
 	[self updateNavigation];
